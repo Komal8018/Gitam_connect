@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <div class="col-md-6 offset-md-3">
+    <h1 class="text-center">Register</h1>
+    <form method="POST" action="">
+      {% csrf_token %}
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="mb-3">
+        <label for="username" class="form-label">Username:</label>
+        <div class="input-group">
+          <span class="input-group-text">@</span>
+          <input type="text" class="form-control" id="username" name="username" aria-describedby="usernameHelp" required>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="first_name" class="form-label">First Name:</label>
+        <input type="text" class="form-control" id="first_name" name="first_name" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="last_name" class="form-label">Last Name:</label>
+        <input type="text" class="form-control" id="last_name" name="last_name" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email Address:</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com">
+      </div>
+
+      <div class="mb-3">
+        <label for="password1" class="form-label">Password:</label>
+        <input type="password" class="form-control" id="password1" name="password1">
+      </div>
+
+      <div class="mb-3">
+        <label for="password2" class="form-label">Confirm Password:</label>
+        <input type="password" class="form-control" id="password2" name="password2">
+      </div>
+
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="terms" required>
+        <label class="form-check-label" for="terms">Agree to terms and conditions</label>
+      </div>
+
+      {% if form.errors %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          Your form has errors:
+          <ul>
+            {% for field in form %}
+              {% if field.errors %}
+                <li>{{ field.label }}: {{ field.errors|join:", " }}</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary w-100">Register</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

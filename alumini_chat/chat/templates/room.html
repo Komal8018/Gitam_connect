@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+        <h5 class="mb-0">{{ room_name }}</h5>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-group">
+            {% if messages %}
+            <div class="chat-container" id="chatbox">
+              {% for message in messages %}
+              <div class="chat-message {% if message.user == request.user %}text-end{% else %}text-start{% endif %}">
+                <b>{{ message.user.username }}</b>: {{ message.content }}<br>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="chat-container" id="chatbox"></div>
+            <b></b>
+            {% endif %}
+          </div>
+          <div class="form-group mt-3">
+            <input class="form-control" placeholder="Enter text here" id="my_input" type="text" required>
+          </div>
+          <div class="d-grid gap-2 mt-3">
+            <button class="btn btn-primary btn-lg" id="submit_button" type="button">Send</button>
+            <a href="{% url 'home' %}" class="btn btn-dark">Go Back</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{ slug|json_script:"room_slug" }}
+<script>
+  const chatbox = document.querySelector("#chatbox");
+
+  function scrollToBottom() {
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+
+  scrollToBottom();
+
+  const roomName = JSON.parse(document.getElementById('room_slug').textContent);
+  const chatSocket = new WebSocket("ws://" + window.location.host + "/ws/" + roomName + "/");
+
+  chatSocket.onopen = function (e) {
+    console.log("The connection was set up successfully!");
+  };
+
+  chatSocket.onclose = function (e) {
+    console.log("Connection closed unexpectedly. Attempting to reconnect...");
+  };
+
+  document.querySelector("#my_input").focus();
+  document.querySelector("#my_input").onkeyup = function (e) {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      document.querySelector("#submit_button").click();
+    }
+  };
+
+  document.querySelector("#submit_button").onclick = function (e) {
+    const messageInput = document.querySelector("#my_input").value;
+    if (messageInput.length === 0) {
+      alert("Add some input first or press the send button!");
+    } else {
+      chatSocket.send(JSON.stringify({
+        message: messageInput,
+        username: "{{ request.user.username }}",
+        room_name: "{{ room_name }}"
+      }));
+      document.querySelector("#my_input").value = '';
+    }
+  };
+
+  chatSocket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+    const div = document.createElement("div");
+    div.innerHTML = "<b>" + data.username + "</b>: " + data.message;
+
+    if (data.username === "{{ request.user.username }}") {
+      div.classList.add("chat-message", "text-end");
+    } else {
+      div.classList.add("chat-message", "text-start");
+    }
+
+    document.querySelector("#chatbox").appendChild(div);
+    scrollToBottom();
+  };
+</script>
+{% else %}
+<div class="container mt-4">
+  <div class="col-md-6 offset-md-3">
+    <h1 class="text-center">Login</h1><br>
+    <form method="POST" action="{% url 'home' %}">
+      {% csrf_token %}
+
+      {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      <div class="mb-3">
+        <label for="username" class="form-label">Enter Username:</label>
+        <input type="text" class="form-control" id="username" placeholder="Username" name="username" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Enter Password:</label>
+        <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
+      </div>
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-secondary">Login</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
